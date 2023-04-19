@@ -5,4 +5,14 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="fonts\7x13B.bdf" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="fonts\7x13B.bdf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>
