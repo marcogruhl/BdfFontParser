@@ -5,4 +5,4 @@ Tested with fonts from [rpi-rgb-led-matrix](https://github.com/hzeller/rpi-rgb-l
 
 I needed this for my Matrix Simulator:
 
-![Matrix Simulator](/MatrixSimulator.png "Matrix Simulator")
+![Matrix Simulator](https://github.com/marcogruhl/BdfFontParser/raw/main/MatrixSimulator.png "Matrix Simulator")
