@@ -3,26 +3,39 @@ using System.Text;
 
 var font = new BdfFont("fonts/7x13B.bdf");
 
-// draw line by line
-for (int line = 2; line < font.BoundingBox.Y; line++)
+Console.Write("Text to parse: ");
+var text = Console.ReadLine();
+
+if (String.IsNullOrEmpty(text))
+    text = "Hello World";
+
+Console.WriteLine(BuildString(font, text));
+
+string BuildString(BdfFont bdfFont, string s)
 {
     var sb = new StringBuilder();
 
-    // iterate through every character
-    foreach (var c in "Hello World".ToCharArray())
+    // draw line by line
+    for (int line = 2; line < bdfFont.BoundingBox.Y; line++)
     {
-        // get the bitmap from the character
-        var bitmap = font[c].Bitmap;
-
-        // get the byte for the specific line
-        var b = (byte)bitmap.GetValue(line);
-
-        // iterate through every bit
-        foreach (var bin in Convert.ToString(b, 2).PadLeft(8, '0').ToCharArray())
+        // iterate through every character
+        foreach (var c in s.ToCharArray())
         {
-            sb.Append(bin == '1' ? '#' : ' ');
+            // get the bitmap from the character
+            var bitmap = bdfFont[c].Bitmap;
+
+            // get the byte for the specific line
+            var b = (byte)bitmap.GetValue(line);
+
+            // iterate through every bit
+            foreach (var bin in Convert.ToString(b, 2).PadLeft(8, '0').ToCharArray())
+            {
+                sb.Append(bin == '1' ? '#' : ' ');
+            }
         }
+
+        sb.AppendLine();
     }
 
-    Console.WriteLine(sb.ToString());
+    return sb.ToString();
 }
