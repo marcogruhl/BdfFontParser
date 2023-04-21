@@ -16,7 +16,7 @@ string BuildString(BdfFont bdfFont, string s)
     var sb = new StringBuilder();
 
     // draw line by line
-    for (int line = 2; line < bdfFont.BoundingBox.Y; line++)
+    for (int line = 0; line < bdfFont.BoundingBox.Y; line++)
     {
         // iterate through every character
         foreach (var c in s.ToCharArray())
