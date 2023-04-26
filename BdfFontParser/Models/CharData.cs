@@ -7,6 +7,6 @@
         public Width ScalableWidth;
         public Width DeviceWidth;
         public BoundingBox BoundingBox;
-        public byte[] Bitmap;
+        public byte[][] Bitmap;
     }
 }

@@ -15,29 +15,25 @@ using System.Text;
 
 var font = new BdfFont("fonts/7x13B.bdf");
 
+var map = bdfFont.GetMapOfString("Hello World");
+var width = map.GetLength(0);
+var height = map.GetLength(1);
+
+var sb = new StringBuilder();
+
 // draw line by line
-for (int line = 2; line < font.BoundingBox.Y; line++)
+for (int line = 0; line < height; line++)
 {
-    var sb = new StringBuilder();
-
-    // iterate through every character
-    foreach (var c in "Hello World".ToCharArray())
+    // iterate through every bit
+    for (int bit = 0; bit < width; bit++)
     {
-        // get the bitmap from the character
-        var bitmap = font[c].Bitmap;
-
-        // get the byte for the specific line
-        var b = (byte)bitmap.GetValue(line);
-
-        // iterate through every bit
-        foreach (var bin in Convert.ToString(b, 2).PadLeft(8, '0').ToCharArray())
-        {
-            sb.Append(bin == '1' ? '#' : ' ');
-        }
-    }
-
-    Console.WriteLine(sb.ToString());
+        sb.Append(map[bit,line] ? '#' : ' ');
+    }    
+        
+    sb.AppendLine();
 }
+
+Console.WriteLine(sb.ToString());
 ```
 This code is shown in the Sample/Console app:
 

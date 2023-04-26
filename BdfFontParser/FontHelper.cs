@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 
 namespace BdfFontParser
 {
@@ -14,23 +13,38 @@ namespace BdfFontParser
             
             var map = new bool[width, height];
 
-            foreach (var c in text.ToCharArray())
+            foreach (var character in text.ToCharArray())
             {
-                var charArray = font[c];
-                
+                var charArray = font[character];
                 var y = 0;
 
-                foreach (var b in charArray.Bitmap.Reverse())
+                for (var r = charArray.Bitmap.Length - 1; r >= 0; r--)
                 {
+                    var b = charArray.Bitmap[r];
+
+                    if(b == null)
+                        continue;
+
                     var x = xStart;
 
-                    var array = Convert.ToString(b, 2).PadLeft(8, '0').ToCharArray();
+                    var length = b.Length * 8;
+                    var chars = new char[length];
 
-                    for (int bi = 0; bi < charArray.DeviceWidth.X - charArray.BoundingBox.OffsetX; bi++)
+                    var count = 0;
+
+                    foreach (var byteArray in b)
                     {
-                        var bin = array[bi];
+                        foreach (var bi in Convert.ToString(byteArray, 2).PadLeft(8, '0').ToCharArray())
+                        {
+                            chars[count++] = bi;
+                        }
+                    }
+
+                    for (int i = 0; i < charArray.DeviceWidth.X - charArray.BoundingBox.OffsetX - 1; i++)
+                    {
+                        var bin = chars[i];
                         var charX = x + charArray.BoundingBox.OffsetX;
-                        var charY = y + baseline + font.BoundingBox.Y - charArray.BoundingBox.Y - charArray.BoundingBox.OffsetY;
+                        var charY = y + baseline - charArray.BoundingBox.OffsetY;
 
                         if (charX > width || charY > height)
                             continue;

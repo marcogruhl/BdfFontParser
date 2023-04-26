@@ -1,8 +1,8 @@
 ﻿using BdfFontParser;
 using System.Text;
 
-// var font = new BdfFont("fonts/helvR12.bdf");
-var font = new BdfFont("fonts/7x13B.bdf");
+var font = new BdfFont("fonts/helvR12.bdf");
+// var font = new BdfFont("fonts/7x13B.bdf");
 
 while(true)
 {

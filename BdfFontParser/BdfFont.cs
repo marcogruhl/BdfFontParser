@@ -109,7 +109,7 @@ namespace BdfFontParser
                             _charMap[character] = new CharData()
                             {
                                 Character = character,
-                                Bitmap = new byte[BoundingBox.Y],
+                                Bitmap = new byte[BoundingBox.Y][],
                                 Name = name,
                                 ScalableWidth = sWidth,
                                 DeviceWidth = dWidth,
@@ -126,9 +126,14 @@ namespace BdfFontParser
                             if(error)
                                 continue;
 
-                            var byteValue = Convert.ToByte(line.Substring(0, 2), 16);
-                            _charMap[character].Bitmap[byteLineIndex++] = byteValue;
-                            // string yourByteString = Convert.ToString(byteValue, 2).PadLeft(8, '0');
+                            _charMap[character].Bitmap[byteLineIndex] = new byte[line.Length / 2];
+
+                            for (var i = 0; i < line.Length; i += 2)
+                            {
+                                _charMap[character].Bitmap[byteLineIndex][i / 2] = Convert.ToByte(line.Substring(i, 2), 16);
+                            }
+                            
+                            byteLineIndex++;
                         }
                     }
                 }
@@ -137,7 +142,6 @@ namespace BdfFontParser
                     Console.WriteLine(e);
                     throw;
                 }
-
             }
         }
     }

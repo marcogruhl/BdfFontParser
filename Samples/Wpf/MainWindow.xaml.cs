@@ -39,6 +39,7 @@ public partial class MainWindow
 
             var font1 = "helvR12";
             var font2 = "7x13B";
+            // var font2 = "helvR12";
 
             var baselineFont1 = Fonts[font1].BoundingBox.Y + Fonts[font1].BoundingBox.OffsetY;
 
