@@ -1,39 +1,37 @@
 ﻿using BdfFontParser;
 using System.Text;
 
+// var font = new BdfFont("fonts/helvR12.bdf");
 var font = new BdfFont("fonts/7x13B.bdf");
 
-Console.Write("Text to parse: ");
-var text = Console.ReadLine();
+while(true)
+{
+    Console.Write("Text to parse: ");
+    var text = Console.ReadLine();
 
-if (String.IsNullOrEmpty(text))
-    text = "Hello World";
+    if (String.IsNullOrEmpty(text))
+        text = "Hello World";
 
-Console.WriteLine(BuildString(font, text));
+    Console.WriteLine(BuildString(font, text));
+}
 
 string BuildString(BdfFont bdfFont, string s)
 {
+    var map = bdfFont.GetMapOfString(s);
+    var width = map.GetLength(0);
+    var height = map.GetLength(1);
+
     var sb = new StringBuilder();
 
     // draw line by line
-    for (int line = 0; line < bdfFont.BoundingBox.Y; line++)
+    for (int line = 0; line < height; line++)
     {
-        // iterate through every character
-        foreach (var c in s.ToCharArray())
+        // iterate through every bit
+        for (int bit = 0; bit < width; bit++)
         {
-            // get the bitmap from the character
-            var bitmap = bdfFont[c].Bitmap;
-
-            // get the byte for the specific line
-            var b = (byte)bitmap.GetValue(line);
-
-            // iterate through every bit
-            foreach (var bin in Convert.ToString(b, 2).PadLeft(8, '0').ToCharArray())
-            {
-                sb.Append(bin == '1' ? '#' : ' ');
-            }
-        }
-
+            sb.Append(map[bit,line] ? '#' : ' ');
+        }    
+        
         sb.AppendLine();
     }
 

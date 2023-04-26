@@ -34,6 +34,7 @@ namespace BdfFontParser
                 Width sWidth = default;
                 Width dWidth = default;
                 BoundingBox boundingBox = default;
+                bool error = false;
 
                 var bitmapMode = false;
                 var byteLineIndex = 0;
@@ -56,11 +57,16 @@ namespace BdfFontParser
                         else if (line.StartsWith("STARTCHAR "))
                         {
                             name = line.Substring(10, line.Length - 10);
+                            error = false;
                         }
                         else if (line.StartsWith("ENCODING "))
                         {
                             var lineChar = line.Substring(9, line.Length - 9);
-                            character = Convert.ToChar(Convert.ToInt32(lineChar));
+
+                            if(UInt32.TryParse(lineChar, out var charInt))
+                                character = Convert.ToChar(charInt);
+                            else
+                                error = true;
                         }
                         else if (line.StartsWith("SWIDTH "))
                         {
@@ -97,6 +103,9 @@ namespace BdfFontParser
                         {
                             bitmapMode = true;
 
+                            if(error)
+                                continue;
+
                             _charMap[character] = new CharData()
                             {
                                 Character = character,
@@ -114,6 +123,9 @@ namespace BdfFontParser
                         }
                         else if (bitmapMode)
                         {
+                            if(error)
+                                continue;
+
                             var byteValue = Convert.ToByte(line.Substring(0, 2), 16);
                             _charMap[character].Bitmap[byteLineIndex++] = byteValue;
                             // string yourByteString = Convert.ToString(byteValue, 2).PadLeft(8, '0');

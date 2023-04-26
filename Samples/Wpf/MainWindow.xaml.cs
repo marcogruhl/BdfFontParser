@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -18,7 +17,8 @@ public partial class MainWindow
 
     private static readonly Dictionary<string, BdfFont> Fonts= new()
     {
-        {"7x13B", new BdfFont("fonts/7x13B.bdf")}
+        {"7x13B", new BdfFont("fonts/7x13B.bdf")},
+        {"helvR12", new BdfFont("fonts/helvR12.bdf")}
     };
 
 
@@ -37,9 +37,14 @@ public partial class MainWindow
         {
             _matrixArray = new SolidColorBrush[MatrixWidth, MatrixHeight];
 
+            var font1 = "helvR12";
+            var font2 = "7x13B";
+
+            var baselineFont1 = Fonts[font1].BoundingBox.Y + Fonts[font1].BoundingBox.OffsetY;
+
             Clear();
-            DrawText(Fonts["7x13B"], 2, 11, Colors.Salmon, DateTime.Now.ToString("T"));
-            DrawText(Fonts["7x13B"], 2, 26, Colors.DeepSkyBlue, DateTime.Now.ToString("M", CultureInfo.CurrentCulture));
+            DrawText(Fonts[font1], 0, baselineFont1, Colors.Salmon, DateTime.Now.ToString("T"));
+            DrawText(Fonts[font2], 0, MatrixHeight + Fonts[font2].BoundingBox.OffsetY, Colors.DeepSkyBlue, DateTime.Now.ToString("M", CultureInfo.CurrentCulture));
 
             await Refresh();
             await Task.Delay(1000/30);
@@ -51,42 +56,34 @@ public partial class MainWindow
         _matrixArray = new SolidColorBrush[MatrixWidth, MatrixHeight];
     }
 
-    private static void DrawText(BdfFont font, int xStart, int yStart, Color color, string toString)
+    private static void DrawText(BdfFont font, int xStart, int yStart, Color color, string text)
     {
-        yStart -= 1;
+        var map = font.GetMapOfString(text);
+        var width = map.GetLength(0);
+        var height = map.GetLength(1);
 
-        foreach (var c in toString.ToCharArray())
+        // draw line by line
+        for (int line = 0; line < height; line++)
         {
-            var charArray = font[c];
-
-            var y = yStart;
-
-            foreach (var b in charArray.Bitmap.Reverse())
+            // iterate through every bit
+            for (int bit = 0; bit < width; bit++)
             {
-                var x = xStart;
+                var charX = bit + xStart;
+                var charY = line + (yStart - font.BoundingBox.Y - font.BoundingBox.OffsetY);
 
-                foreach (var bin in Convert.ToString(b, 2).PadLeft(8, '0').ToCharArray())
+                if(map[bit,line] && charX >= 0 && charY >= 0 && charX <= MatrixWidth-1 && charY <= MatrixHeight-1)
                 {
-                    if(bin == '1' && x+charArray.BoundingBox.OffsetX >= 0 && y-charArray.BoundingBox.OffsetY >= 0 && x+charArray.BoundingBox.OffsetX <= MatrixWidth-1 && y-charArray.BoundingBox.OffsetY <= MatrixHeight-1)
+                    try
                     {
-                        try
-                        {
-                            _matrixArray[x+charArray.BoundingBox.OffsetX,y-charArray.BoundingBox.OffsetY] = new SolidColorBrush(Color.FromArgb(255, color.R, color.G, color.B));
-                        }
-                        catch (Exception e)
-                        {
-                            Console.WriteLine(e);
-                            throw;
-                        }
+                        _matrixArray[charX,charY] = new SolidColorBrush(Color.FromArgb(255, color.R, color.G, color.B));
                     }
-
-                    x++;
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                        throw;
+                    }
                 }
-
-                y--;
             }
-                
-            xStart += charArray.DeviceWidth.X;
         }
     }
 
