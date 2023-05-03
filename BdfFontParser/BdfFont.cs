@@ -14,134 +14,141 @@ namespace BdfFontParser
         public BdfFont(string path)
         {
             BuildMap(path);
+        }        
+        
+        public BdfFont(IEnumerable<string> lines)
+        {
+            BuildMap(lines);
         }
 
         public CharData this[char c] => _charMap[c];
+        
+        /// <summary>
+        /// Build Map from path
+        /// </summary>
+        /// <param name="path">path to .bdf file</param>
+        private void BuildMap(string path)
+        {
+            IEnumerable<string> lines = File.ReadLines(path);
+            BuildMap(lines);
+        }
 
         /// <summary>
         /// https://en.wikipedia.org/wiki/Glyph_Bitmap_Distribution_Format
         /// Sample used: https://en.wikipedia.org/wiki/GNU_Unifont #Hexdraw representation of the example
         /// </summary>
-        /// <param name="path"></param>
-        private void BuildMap(string path)
+        private void BuildMap(IEnumerable<string> lines)
         {
-            using (new FileStream(path, FileMode.Open, FileAccess.Read))
+            string name = default;
+            char character = default;
+            Width sWidth = default;
+            Width dWidth = default;
+            BoundingBox boundingBox = default;
+            bool error = false;
+
+            var bitmapMode = false;
+            var byteLineIndex = 0;
+
+            try
             {
-                IEnumerable<string> lines = File.ReadLines(path);
-
-                string name = default;
-                char character = default;
-                Width sWidth = default;
-                Width dWidth = default;
-                BoundingBox boundingBox = default;
-                bool error = false;
-
-                var bitmapMode = false;
-                var byteLineIndex = 0;
-
-                try
+                foreach (var line in lines)
                 {
-                    foreach (var line in lines)
+                    if (line.StartsWith("FONTBOUNDINGBOX "))
                     {
-                        if (line.StartsWith("FONTBOUNDINGBOX "))
+                        var lineChar = line.Split(' ');
+                        BoundingBox = new BoundingBox()
                         {
-                            var lineChar = line.Split(' ');
-                            BoundingBox = new BoundingBox()
-                            {
-                                X = Convert.ToInt16(lineChar[1]),
-                                Y = Convert.ToInt16(lineChar[2]),
-                                OffsetX = Convert.ToInt16(lineChar[3]),
-                                OffsetY = Convert.ToInt16(lineChar[4])
-                            };
-                        }
-                        else if (line.StartsWith("STARTCHAR "))
-                        {
-                            name = line.Substring(10, line.Length - 10);
-                            error = false;
-                        }
-                        else if (line.StartsWith("ENCODING "))
-                        {
-                            var lineChar = line.Substring(9, line.Length - 9);
+                            X = Convert.ToInt16(lineChar[1]),
+                            Y = Convert.ToInt16(lineChar[2]),
+                            OffsetX = Convert.ToInt16(lineChar[3]),
+                            OffsetY = Convert.ToInt16(lineChar[4])
+                        };
+                    }
+                    else if (line.StartsWith("STARTCHAR "))
+                    {
+                        name = line.Substring(10, line.Length - 10);
+                        error = false;
+                    }
+                    else if (line.StartsWith("ENCODING "))
+                    {
+                        var lineChar = line.Substring(9, line.Length - 9);
 
-                            if(UInt32.TryParse(lineChar, out var charInt))
-                                character = Convert.ToChar(charInt);
-                            else
-                                error = true;
-                        }
-                        else if (line.StartsWith("SWIDTH "))
+                        if (UInt32.TryParse(lineChar, out var charInt))
+                            character = Convert.ToChar(charInt);
+                        else
+                            error = true;
+                    }
+                    else if (line.StartsWith("SWIDTH "))
+                    {
+                        var lineChar = line.Split(' ');
+                        sWidth = new Width()
                         {
-                            var lineChar = line.Split(' ');
-                            sWidth = new Width()
-                            {
-                                X = Convert.ToInt16(lineChar[1]),
-                                Y = Convert.ToInt16(lineChar[2])
-                            };
-
-                        }
-                        else if (line.StartsWith("DWIDTH "))
+                            X = Convert.ToInt16(lineChar[1]),
+                            Y = Convert.ToInt16(lineChar[2])
+                        };
+                    }
+                    else if (line.StartsWith("DWIDTH "))
+                    {
+                        var lineChar = line.Split(' ');
+                        dWidth = new Width()
                         {
-                            var lineChar = line.Split(' ');
-                            dWidth = new Width()
-                            {
-                                X = Convert.ToInt16(lineChar[1]),
-                                Y = Convert.ToInt16(lineChar[2])
-                            };
-
-                        }
-                        else if (line.StartsWith("BBX "))
+                            X = Convert.ToInt16(lineChar[1]),
+                            Y = Convert.ToInt16(lineChar[2])
+                        };
+                    }
+                    else if (line.StartsWith("BBX "))
+                    {
+                        var lineChar = line.Split(' ');
+                        boundingBox = new BoundingBox()
                         {
-                            var lineChar = line.Split(' ');
-                            boundingBox = new BoundingBox()
-                            {
-                                X = Convert.ToInt16(lineChar[1]),
-                                Y = Convert.ToInt16(lineChar[2]),
-                                OffsetX = Convert.ToInt16(lineChar[3]),
-                                OffsetY = Convert.ToInt16(lineChar[4])
-                            };
-                        }
-                        else if (line.StartsWith("BITMAP"))
+                            X = Convert.ToInt16(lineChar[1]),
+                            Y = Convert.ToInt16(lineChar[2]),
+                            OffsetX = Convert.ToInt16(lineChar[3]),
+                            OffsetY = Convert.ToInt16(lineChar[4])
+                        };
+                    }
+                    else if (line.StartsWith("BITMAP"))
+                    {
+                        bitmapMode = true;
+
+                        if (error)
+                            continue;
+
+                        _charMap[character] = new CharData()
                         {
-                            bitmapMode = true;
+                            Character = character,
+                            Bitmap = new byte[BoundingBox.Y][],
+                            Name = name,
+                            ScalableWidth = sWidth,
+                            DeviceWidth = dWidth,
+                            BoundingBox = boundingBox
+                        };
+                    }
+                    else if (line.StartsWith("ENDCHAR"))
+                    {
+                        bitmapMode = false;
+                        byteLineIndex = 0;
+                    }
+                    else if (bitmapMode)
+                    {
+                        if (error)
+                            continue;
 
-                            if(error)
-                                continue;
+                        _charMap[character].Bitmap[byteLineIndex] = new byte[line.Length / 2];
 
-                            _charMap[character] = new CharData()
-                            {
-                                Character = character,
-                                Bitmap = new byte[BoundingBox.Y][],
-                                Name = name,
-                                ScalableWidth = sWidth,
-                                DeviceWidth = dWidth,
-                                BoundingBox = boundingBox
-                            };
-                        }
-                        else if (line.StartsWith("ENDCHAR"))
+                        for (var i = 0; i < line.Length; i += 2)
                         {
-                            bitmapMode = false;
-                            byteLineIndex = 0;
+                            _charMap[character].Bitmap[byteLineIndex][i / 2] = Convert.ToByte(line.Substring(i, 2), 16);
                         }
-                        else if (bitmapMode)
-                        {
-                            if(error)
-                                continue;
 
-                            _charMap[character].Bitmap[byteLineIndex] = new byte[line.Length / 2];
-
-                            for (var i = 0; i < line.Length; i += 2)
-                            {
-                                _charMap[character].Bitmap[byteLineIndex][i / 2] = Convert.ToByte(line.Substring(i, 2), 16);
-                            }
-                            
-                            byteLineIndex++;
-                        }
+                        byteLineIndex++;
                     }
                 }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
-                    throw;
-                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
             }
         }
     }

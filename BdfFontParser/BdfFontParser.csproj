@@ -10,13 +10,13 @@
     <RepositoryUrl>https://github.com/marcogruhl/BdfFontParser</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>BDF; Glyph Bitmap Distribution Format; Bitmap Distribution Format; C#; dotnet; .NET</PackageTags>
-    <FileVersion>0.2</FileVersion>
-    <AssemblyVersion>0.2</AssemblyVersion>
     <PackageIcon>Icon.png</PackageIcon>
-    <Version>0.2</Version>
+    <Version>0.3</Version>
     <PackageLicenseExpression> MIT</PackageLicenseExpression>
     <IncludeSymbols>True</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <AssemblyVersion>$(PackageVersion)</AssemblyVersion>
+    <FileVersion>$(PackageVersion)</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
